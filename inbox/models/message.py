@@ -146,6 +146,11 @@ class Message(MailSyncBase, HasRevisions, HasPublicID):
     version = deferred(Column(Base36UID, nullable=True,
                               default=generate_public_id))
 
+    def mark_for_deletion(self):
+        """Mark this message to be deleted by an asynchronous delete
+        handler."""
+        self.deleted_at = datetime.datetime.utcnow()
+
     @validates('subject')
     def validate_length(self, key, value):
         if value is None:
