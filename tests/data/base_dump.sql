@@ -1,13 +1,13 @@
--- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.41, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: test
 -- ------------------------------------------------------
--- Server version	5.5.40-0ubuntu0.12.04.1-log
+-- Server version	5.5.41-0ubuntu0.12.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -148,7 +148,7 @@ CREATE TABLE `alembic_version` (
 
 LOCK TABLES `alembic_version` WRITE;
 /*!40000 ALTER TABLE `alembic_version` DISABLE KEYS */;
-INSERT INTO `alembic_version` VALUES ('5305d4ae30b4');
+INSERT INTO `alembic_version` VALUES ('c77a90d524');
 /*!40000 ALTER TABLE `alembic_version` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -235,7 +235,7 @@ CREATE TABLE `calendar` (
   `provider_name` varchar(64) NOT NULL,
   `namespace_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uuid` (`namespace_id`,`provider_name`,`name`),
+  UNIQUE KEY `uuid` (`namespace_id`,`uid`,`name`),
   CONSTRAINT `calendar_ibfk_2` FOREIGN KEY (`namespace_id`) REFERENCES `namespace` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -246,7 +246,7 @@ CREATE TABLE `calendar` (
 
 LOCK TABLES `calendar` WRITE;
 /*!40000 ALTER TABLE `calendar` DISABLE KEYS */;
-INSERT INTO `calendar` VALUES (1,'œ5ˆê¨F\0ªÌ´Åûˆ√¿','default',NULL,NULL,NULL,NULL,'167wjlgf89za2cdhy17p9bsu8',0,'',1),(2,'œ5ˆê¨F\0ª3´Åûˆ√¿','provider_default',NULL,NULL,NULL,NULL,'167wjlgf89za2cdhy17p9bsu8',1,'',1),(3,'œ5ˆê¨F\0ª5´Åûˆ√¿','default',NULL,NULL,NULL,NULL,'167wjlgf89za2cdhy17p9bsu8',0,'',NULL);
+INSERT INTO `calendar` VALUES (1,'œ5ˆê¨F\0ªÌ´Åûˆ√¿','default',NULL,NULL,NULL,NULL,'default',0,'',1),(2,'œ5ˆê¨F\0ª3´Åûˆ√¿','provider_default',NULL,NULL,NULL,NULL,'provider_default',1,'',1),(3,'œ5ˆê¨F\0ª5´Åûˆ√¿','default',NULL,NULL,NULL,NULL,'167wjlgf89za2cdhy17p9bsu8',0,'',NULL);
 /*!40000 ALTER TABLE `calendar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -581,9 +581,9 @@ CREATE TABLE `event` (
   `namespace_id` int(11) DEFAULT NULL,
   `participants` longtext,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uuid` (`uid`,`source`,`namespace_id`,`provider_name`),
   KEY `event_ibfk_2` (`calendar_id`),
   KEY `namespace_id` (`namespace_id`),
+  KEY `ix_event_ns_uid_calendar_id` (`namespace_id`,`uid`,`calendar_id`),
   CONSTRAINT `event_ibfk_2` FOREIGN KEY (`calendar_id`) REFERENCES `calendar` (`id`) ON DELETE CASCADE,
   CONSTRAINT `event_ibfk_3` FOREIGN KEY (`namespace_id`) REFERENCES `namespace` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
@@ -1771,4 +1771,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-02-18  0:45:54
+-- Dump completed on 2015-03-12 18:47:23
