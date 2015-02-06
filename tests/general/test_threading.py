@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import pytest
 from inbox.util.threading import fetch_corresponding_thread
 from inbox.util.misc import cleanup_subject
 from tests.util.base import (add_fake_message, add_fake_thread,
@@ -64,7 +63,3 @@ def test_self_send(db, default_namespace):
 
     matched_thread = fetch_corresponding_thread(db.session, default_namespace.id, msg2)
     assert matched_thread is first_thread, "Should match on self-send"
-
-
-if __name__ == '__main__':
-    pytest.main([__file__])
