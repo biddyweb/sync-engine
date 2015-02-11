@@ -160,7 +160,6 @@ def tag_query_api():
         results = [x[0] for x in query.all()]
     else:
         results = query.all()
-
     return g.encoder.jsonify(results)
 
 
@@ -174,6 +173,12 @@ def tag_read_api(public_id):
     except NoResultFound:
         raise NotFoundError('No tag found')
 
+    unread_tag = g.db_session.query(Tag).filter_by(
+        namespace_id=g.namespace.id,
+        name='unread').first()
+    if unread_tag:
+        tag.unread_count = tag.intersection(unread_tag.id, g.db_session)
+        tag.thread_count = tag.count_threads()
     return g.encoder.jsonify(tag)
 
 

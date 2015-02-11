@@ -263,3 +263,5 @@ class TagItem(MailSyncBase):
     @property
     def namespace(self):
         return self.thread.namespace
+
+Index("tag_thread_ids", TagItem.thread_id, TagItem.tag_id)
