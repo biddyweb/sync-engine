@@ -461,10 +461,9 @@ class Message(MailSyncBase, HasRevisions, HasPublicID):
     # Whether this draft is a reply to an existing thread.
     is_reply = Column(Boolean)
 
-    # Deprecated
-    # TODO(emfree): remove from schema
-    resolved_message_id = deferred(Column(Integer, ForeignKey('message.id'),
-                                          nullable=True))
+    reply_to_message_id = Column(Integer, ForeignKey('message.id'),
+                                 nullable=True)
+    reply_to_message = relationship('Message', uselist=False)
 
     @property
     def versioned_relationships(self):

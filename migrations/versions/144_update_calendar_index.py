@@ -1,14 +1,14 @@
 """Update Calendar index.
 
 Revision ID: 1c73ca99c03b
-Revises:1f746c93e8fd
+Revises:1d7a72222b7c
 Create Date: 2015-02-26 00:50:52.322510
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '1c73ca99c03b'
-down_revision = '1f746c93e8fd'
+down_revision = '1d7a72222b7c'
 
 from alembic import op
 
