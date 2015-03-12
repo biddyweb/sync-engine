@@ -12,6 +12,8 @@ from tests.util.base import (default_account, default_namespace,
 
 __all__ = ['default_namespace', 'thread']
 
+__all__ = ['default_namespace', 'thread']
+
 
 def full_path(relpath):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), relpath)
