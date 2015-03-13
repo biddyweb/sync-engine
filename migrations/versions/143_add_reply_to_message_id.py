@@ -1,14 +1,14 @@
 """add reply_to_message_id
 
 Revision ID: 1d7a72222b7c
-Revises:1f746c93e8fd
+Revises:486c7fa5b533
 Create Date: 2015-02-18 21:40:50.082303
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '1d7a72222b7c'
-down_revision = '1f746c93e8fd'
+down_revision = '486c7fa5b533'
 
 from alembic import op
 
