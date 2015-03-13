@@ -18,6 +18,7 @@ from inbox.api.validation import (get_tags, get_attachments,
                                   get_draft, valid_public_id, valid_event,
                                   valid_event_update, timestamp,
                                   bounded_str, view, strict_parse_args, limit,
+                                  strict_bool,
                                   ValidatableArgument,
                                   validate_draft_recipients,
                                   validate_search_query,
@@ -558,6 +559,7 @@ def event_search_api():
     g.parser.add_argument('title', type=bounded_str, location='args')
     g.parser.add_argument('description', type=bounded_str, location='args')
     g.parser.add_argument('location', type=bounded_str, location='args')
+    g.parser.add_argument('busy', type=strict_bool, location='args')
     g.parser.add_argument('starts_before', type=timestamp, location='args')
     g.parser.add_argument('starts_after', type=timestamp, location='args')
     g.parser.add_argument('ends_before', type=timestamp, location='args')
@@ -572,6 +574,7 @@ def event_search_api():
         title=args['title'],
         description=args['description'],
         location=args['location'],
+        busy=args['busy'],
         starts_before=args['starts_before'],
         starts_after=args['starts_after'],
         ends_before=args['ends_before'],
@@ -599,6 +602,7 @@ def event_create_api():
     description = data.get('description')
     location = data.get('location')
     when = data.get('when')
+    busy = data.get('busy', True)
 
     participants = data.get('participants', [])
     for p in participants:
@@ -614,6 +618,7 @@ def event_create_api():
         title=title,
         description=description,
         location=location,
+        busy=busy,
         when=when,
         read_only=False,
         is_owner=True,
