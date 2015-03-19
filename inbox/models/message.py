@@ -9,7 +9,7 @@ from flanker import mime
 
 from sqlalchemy import (Column, Integer, BigInteger, String, DateTime,
                         Boolean, Enum, ForeignKey, Text, Index)
-from sqlalchemy.orm import relationship, backref, validates
+from sqlalchemy.orm import relationship, backref, validates, deferred
 from sqlalchemy.sql.expression import false
 
 from inbox.util.html import plaintext2html, strip_tags
@@ -144,7 +144,8 @@ class Message(MailSyncBase, HasRevisions, HasPublicID):
     references = Column(JSON, nullable=True)
 
     # Only used on drafts
-    version = Column(Base36UID, nullable=True, default=generate_public_id)
+    version = deferred(Column(Base36UID, nullable=True,
+                              default=generate_public_id))
 
     @validates('subject')
     def validate_length(self, key, value):
@@ -452,8 +453,8 @@ class Message(MailSyncBase, HasRevisions, HasPublicID):
 
     # Deprecated
     # TODO(emfree): remove from schema
-    resolved_message_id = Column(Integer, ForeignKey('message.id'),
-                                 nullable=True)
+    resolved_message_id = deferred(Column(Integer, ForeignKey('message.id'),
+                                          nullable=True))
 
     @property
     def versioned_relationships(self):
