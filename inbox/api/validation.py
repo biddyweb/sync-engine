@@ -3,7 +3,7 @@ from datetime import datetime
 from flanker.addresslib import address
 from flask.ext.restful import reqparse
 from sqlalchemy.orm.exc import NoResultFound
-from inbox.models import Account, Calendar, Tag, Thread, Block, Message
+from inbox.models import Calendar, Tag, Thread, Block, Message
 from inbox.models.when import parse_as_when
 from inbox.api.err import InputError, NotFoundError, ConflictError
 
@@ -185,10 +185,6 @@ def get_recipients(recipients, field, validate_emails=False):
 
 
 def get_calendar(calendar_public_id, namespace, db_session):
-    if calendar_public_id is None:
-        account = db_session.query(Account).filter(
-            Account.id == namespace.account_id).one()
-        return account.default_calendar
     valid_public_id(calendar_public_id)
     try:
         return db_session.query(Calendar). \
