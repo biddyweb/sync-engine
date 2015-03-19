@@ -60,7 +60,17 @@ setup(
                  filter(os.path.isfile, glob.glob("migrations/versions/*")))
                 ],
 
-    scripts=['bin/inbox-start', 'bin/search-index-service', 'bin/syncback-service'],
+    scripts=['bin/inbox-start',
+             'bin/inbox-console',
+             'bin/search-index-service',
+             'bin/migrate-participant-format',
+             'bin/create-emailed-events-calendar.py',
+             'bin/start-stop-account',
+             'bin/inbox-auth',
+             'bin/regen-labels',
+             'bin/delete-account',
+             'bin/alive-dead-metrics',
+             'bin/syncback-service'],
 
     # See:
     # https://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins
