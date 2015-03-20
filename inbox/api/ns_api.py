@@ -8,7 +8,7 @@ from inbox.models.session import session_scope
 
 from flask import request, g, Blueprint, make_response, Response
 from flask import jsonify as flask_jsonify
-from flask.ext.restful import reqparse
+from flask.ext.restful import reqparse, inputs
 from sqlalchemy import asc, or_, func
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -284,7 +284,11 @@ def thread_query_api():
     g.parser.add_argument('thread_id', type=valid_public_id, location='args')
     g.parser.add_argument('tag', type=bounded_str, location='args')
     g.parser.add_argument('view', type=view, location='args')
+    g.parser.add_argument('expand', type=inputs.boolean, location='args',
+                          default=False)
+
     args = strict_parse_args(g.parser, request.args)
+    expand = args['expand']
 
     threads = filtering.threads(
         namespace_id=g.namespace.id,
@@ -304,9 +308,12 @@ def thread_query_api():
         limit=args['limit'],
         offset=args['offset'],
         view=args['view'],
+        expand=expand,
         db_session=g.db_session)
 
-    return g.encoder.jsonify(threads)
+    # Use a new encoder object with the expand parameter set.
+    encoder = APIEncoder(g.namespace.public_id, expand=expand)
+    return encoder.jsonify(threads)
 
 
 @app.route('/threads/search', methods=['POST'])
@@ -335,12 +342,18 @@ def thread_search_api():
 
 @app.route('/threads/<public_id>')
 def thread_api(public_id):
+    g.parser.add_argument('expand', type=inputs.boolean, location='args',
+                          default=False)
+    args = strict_parse_args(g.parser, request.args)
+    expand = args['expand']
+    # Use custom encoder to support expand property.
+    encoder = APIEncoder(g.namespace.public_id, expand=expand)
     try:
         valid_public_id(public_id)
         thread = g.db_session.query(Thread).filter(
             Thread.public_id == public_id,
             Thread.namespace_id == g.namespace.id).one()
-        return g.encoder.jsonify(thread)
+        return encoder.jsonify(thread)
     except NoResultFound:
         raise NotFoundError("Couldn't find thread `{0}`".format(public_id))
 
@@ -1051,6 +1064,7 @@ def sync_deltas():
                           location='args')
     g.parser.add_argument('wait', type=bool, default=False,
                           location='args')
+    # TODO(emfree): should support `expand` parameter in delta sync endpoints.
     args = strict_parse_args(g.parser, request.args)
     exclude_types = args.get('exclude_types')
     cursor = args['cursor']
@@ -1137,6 +1151,7 @@ def stream_changes():
     # Hack to not keep a database session open for the entire (long) request
     # duration.
     g.db_session.close()
+    # TODO make transaction log support the `expand` feature
     generator = delta_sync.streaming_change_generator(
         g.namespace.id, transaction_pointer=transaction_pointer,
         poll_interval=1, timeout=timeout, exclude_types=exclude_types)
