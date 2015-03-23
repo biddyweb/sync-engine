@@ -66,7 +66,6 @@ class Message(MailSyncBase, HasRevisions, HasPublicID):
     # Do delete messages if their associated thread is deleted.
     thread_id = Column(Integer, ForeignKey('thread.id', ondelete='CASCADE'),
                        nullable=False)
-    thread_order = deferred(Column(Integer, nullable=False, default=0))
 
     thread = relationship(
         'Thread',

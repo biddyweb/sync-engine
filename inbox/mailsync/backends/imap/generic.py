@@ -77,7 +77,7 @@ from inbox.util.concurrency import retry_and_report_killed
 from inbox.util.debug import bind_context
 from inbox.util.itert import chunk
 from inbox.util.misc import or_none
-from inbox.util.threading import cleanup_subject, thread_messages
+from inbox.util.threading import cleanup_subject
 from inbox.basicauth import AuthError
 from inbox.log import get_logger
 log = get_logger()
@@ -449,13 +449,9 @@ class FolderSyncEngine(Greenlet):
             if construct_new_thread:
                 new_uid.message.thread = ImapThread.from_imap_message(
                     db_session, new_uid.account.namespace, new_uid.message)
-                new_uid.message.thread_order = 0
             else:
                 parent_thread = parent_threads[0]
                 parent_thread.messages.append(new_uid.message)
-                constructed_thread = thread_messages(parent_thread.messages)
-                for index, message in enumerate(constructed_thread):
-                    message.thread_order = index
 
         db_session.flush()
         # Make sure this thread has all the correct labels
