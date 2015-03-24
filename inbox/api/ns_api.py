@@ -13,13 +13,12 @@ from inbox.models import (Message, Block, Part, Thread, Namespace,
 from inbox.api.sending import send_draft
 from inbox.api.kellogs import APIEncoder
 from inbox.api import filtering
-from inbox.api.validation import (get_tags, get_attachments,
-                                  get_calendar, get_thread, get_recipients,
-                                  get_draft, valid_public_id, valid_event,
+from inbox.api.validation import (get_tags, get_attachments, get_calendar,
+                                  get_thread, get_recipients, get_draft,
+                                  valid_public_id, valid_event,
                                   valid_event_update, timestamp,
-                                  bounded_str, view, strict_parse_args, limit,
-                                  strict_bool,
-                                  ValidatableArgument,
+                                  bounded_str, view, strict_parse_args,
+                                  limit, ValidatableArgument, strict_bool,
                                   validate_draft_recipients,
                                   validate_search_query,
                                   valid_delta_object_types)
@@ -565,6 +564,8 @@ def event_search_api():
     g.parser.add_argument('ends_before', type=timestamp, location='args')
     g.parser.add_argument('ends_after', type=timestamp, location='args')
     g.parser.add_argument('view', type=bounded_str, location='args')
+    g.parser.add_argument('expand_recurring', type=strict_bool,
+                          location='args')
     args = strict_parse_args(g.parser, request.args)
 
     results = filtering.events(
@@ -582,6 +583,7 @@ def event_search_api():
         limit=args['limit'],
         offset=args['offset'],
         view=args['view'],
+        expand_recurring=args['expand_recurring'],
         db_session=g.db_session)
 
     return g.encoder.jsonify(results)
