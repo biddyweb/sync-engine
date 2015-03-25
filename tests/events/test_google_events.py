@@ -220,6 +220,46 @@ def test_event_parsing():
         assert cmp_event_attrs(obtained, expected)
 
 
+def test_handle_offset_all_day_events():
+    raw_event = {
+        'created': '2014-01-09T03:33:02.000Z',
+        'creator': {
+            'displayName': 'Ben Bitdiddle',
+            'email': 'ben.bitdiddle2222@gmail.com',
+            'self': True
+        },
+        'etag': '"2778476764000000"',
+        'htmlLink': 'https://www.google.com/calendar/event?eid=BAR',
+        'iCalUID': '20140615_60o30dr564o30c1g60o30dr4ck@google.com',
+        'id': '20140615_60o30dr564o30c1g60o30dr4ck',
+        'kind': 'calendar#event',
+        'organizer': {
+            'displayName': 'Ben Bitdiddle',
+            'email': 'ben.bitdiddle2222@gmail.com',
+            'self': True
+        },
+        'sequence': 0,
+        'start': {'date': '2014-03-15'},
+        'end': {u'date': '2014-03-15'},
+        'status': 'confirmed',
+        'summary': 'Ides of March',
+        'transparency': 'transparent',
+        'updated': '2014-01-09T03:33:02.000Z',
+        'visibility': 'public'
+    }
+    expected = Event(uid='20140615_60o30dr564o30c1g60o30dr4ck',
+                     title='Ides of March',
+                     description=None,
+                     read_only=False,
+                     busy=False,
+                     start=arrow.get(2014, 03, 15),
+                     end=arrow.get(2014, 03, 15),
+                     all_day=True,
+                     owner='Ben Bitdiddle <ben.bitdiddle2222@gmail.com>',
+                     participants=[])
+    assert cmp_event_attrs(expected, parse_event_response(raw_event))
+
+
 def test_pagination():
     first_response = requests.Response()
     first_response.status_code = 200
