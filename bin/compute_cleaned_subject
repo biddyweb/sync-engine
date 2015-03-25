@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+# compute the value of _cleaned_subject for a thread.
+import re
+import gevent
+import gevent.monkey
+import gevent.pool
+gevent.monkey.patch_all()
+import click
+from inbox.log import configure_logging, get_logger
+from inbox.models.session import session_scope
+from inbox.models import Namespace, Message, Thread
+configure_logging(False)
+log = get_logger()
+
+
+def cleanup_subject(subject_str):
+    """Clean-up a message subject-line.
+    For instance, 'Re: Re: Re: Birthday party' becomes 'Birthday party'"""
+    if subject_str is None:
+        return ''
+    # TODO consider expanding to all
+    # http://en.wikipedia.org/wiki/List_of_email_subject_abbreviations
+    cleanup_regexp = "(?i)^((re|fw|fwd|aw|wg):\s*)+"
+    return re.sub(cleanup_regexp, "", subject_str)
+
+
+def compute_cleaned_subject(namespace_id):
+    log.info('Computing cleaned subjects for namespace',
+             namespace_id=namespace_id)
+    with session_scope() as db_session:
+        created_thread_ids = db_session.query(Message.thread_id).filter(
+            Message.namespace_id == namespace_id,
+            Message.inbox_uid.isnot(None)).subquery()
+        threads = db_session.query(Thread).filter(
+            Thread.id.in_(created_thread_ids))
+        index = 0
+        for thread in threads:
+            index += 1
+            thread._cleaned_subject = cleanup_subject(thread.subject)
+            log.info('Cleaned subject', thread_id=thread.id,
+                     namespace_id=namespace_id)
+            if index % 100 == 0:
+                db_session.commit()
+        db_session.commit()
+
+
+@click.command()
+@click.option('--namespace_ids')
+def main(namespace_ids):
+    if namespace_ids:
+        ns_ids = [int(ns_id) for ns_id in namespace_ids.split(',')]
+    else:
+        with session_scope() as db_session:
+            ns_ids = [ns.id for ns in db_session.query(Namespace)]
+    pool = gevent.pool.Pool(size=10)
+    for ns_id in ns_ids:
+        pool.add(gevent.spawn(compute_cleaned_subject, ns_id))
+
+    pool.join()
+
+
+if __name__ == '__main__':
+    main()
