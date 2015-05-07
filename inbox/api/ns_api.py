@@ -1075,8 +1075,10 @@ def draft_send_api():
 ##
 # Client syncing
 ##
+from inbox.util.debug import profile
 
 @app.route('/delta')
+#@profile
 def sync_deltas():
     g.parser.add_argument('cursor', type=valid_public_id, location='args',
                           required=True)
@@ -1106,7 +1108,7 @@ def sync_deltas():
     while time.time() - start_time < LONG_POLL_REQUEST_TIMEOUT:
         with session_scope() as db_session:
             deltas, _ = delta_sync.format_transactions_after_pointer(
-                g.namespace.id, start_pointer, db_session, args['limit'],
+                g.namespace, start_pointer, db_session, args['limit'],
                 exclude_types)
 
         response = {
