@@ -85,7 +85,7 @@ def save_folder_names(log, account_id, folder_names, db_session):
             name = name[:MAX_FOLDER_NAME_LENGTH]
             if name not in local_folders:
                 # Folder.create() takes care of adding to the session
-                folder = Folder.create(account, name, db_session)
+                folder = Folder.find_or_create(db_session, account, name)
                 folder.get_associated_tag(db_session)
             else:
                 del local_folders[name]
