@@ -5,19 +5,19 @@ from sqlalchemy import (Column, Integer, BigInteger, Boolean, Enum,
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql.expression import false
-
 from inbox.sqlalchemy_ext.util import (LittleJSON, JSON, MutableDict)
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import object_session
 
 from inbox.log import get_logger
 log = get_logger()
-
 from inbox.models.base import MailSyncBase
 from inbox.models.account import Account
 from inbox.models.thread import Thread
 from inbox.models.message import Message
 from inbox.models.folder import Folder
+from inbox.models.label import Label
 from inbox.util.misc import cleanup_subject
-
 
 PROVIDER = 'imap'
 
@@ -58,9 +58,10 @@ class ImapAccount(Account):
 
 
 class ImapUid(MailSyncBase):
-    """ Maps UIDs to their IMAP folders and per-UID flag metadata.
-
+    """
+    Maps UIDs to their IMAP folders and per-UID flag metadata.
     This table is used solely for bookkeeping by the IMAP mail sync backends.
+
     """
     account_id = Column(ForeignKey(ImapAccount.id, ondelete='CASCADE'),
                         nullable=False)
@@ -77,6 +78,10 @@ class ImapUid(MailSyncBase):
     # We almost always need the folder name too, so eager load by default.
     folder = relationship(Folder, lazy='joined',
                           backref=backref('imapuids', passive_deletes=True))
+
+    labels = association_proxy(
+        'labelitems', 'label',
+        creator=lambda label: LabelItem(label=label))
 
     # Flags #
     # Message has not completed composition (marked as a draft).
@@ -95,9 +100,12 @@ class ImapUid(MailSyncBase):
     g_labels = Column(JSON, default=lambda: [], nullable=True)
 
     def update_flags_and_labels(self, new_flags, x_gm_labels=None):
-        """Sets flag and g_labels values based on the new_flags and x_gm_labels
+        """
+        Sets flag and g_labels values based on the new_flags and x_gm_labels
         parameters. Returns True if any values have changed compared to what we
-        previously stored."""
+        previously stored.
+
+        """
         changed = False
         new_flags = set(new_flags)
         col_for_flag = {
@@ -120,9 +128,15 @@ class ImapUid(MailSyncBase):
         self.extra_flags = extra_flags
 
         if x_gm_labels is not None:
+            ### DEBUG ###
+            import pdb; pdb.set_trace()
+
             new_labels = sorted(x_gm_labels)
+
             if new_labels != self.g_labels:
                 changed = True
+                self.update_labels(new_labels)
+
             self.g_labels = new_labels
 
             # Gmail doesn't use the \Draft flag. Go figure.
@@ -130,7 +144,40 @@ class ImapUid(MailSyncBase):
                 if not self.is_draft:
                     changed = True
                 self.is_draft = True
+
         return changed
+
+    def update_labels(self, new_labels):
+        add = set(new_labels) - set(self.labels)
+        for name in add:
+            label = Label.find_or_create(
+                object_session(self), self.account, name)
+            self.apply_label(label)
+
+        remove = set(self.labels) - set(new_labels)
+        if remove:
+            with object_session(self).no_autoflush:
+                for label in object_session.query(Label).filter(
+                        Label.namespace_id == self.account.namespace.id,
+                        Label.name.in_(remove)).all():
+                    self.remove_label(label)
+
+    def apply_label(self, label, execute_action=False):
+        if label not in self.labels:
+            self.labels.add(label)
+
+        if execute_action:
+            # TODO[k]: Syncback action goes here
+            pass
+
+    def remove_label(self, label, execute_action=False):
+        if label not in self.labels:
+            return
+        self.labels.remove(label)
+
+        if execute_action:
+            # TODO[k]: Syncback action goes here
+            pass
 
     @property
     def namespace(self):
@@ -329,3 +376,28 @@ class ImapFolderSyncStatus(MailSyncBase):
             self._metrics = metrics
 
     __table_args__ = (UniqueConstraint('account_id', 'folder_id'),)
+
+
+class LabelItem(MailSyncBase):
+    """ Mapping between imapuids and labels. """
+    imapuid_id = Column(Integer, ForeignKey(ImapUid.id, ondelete='CASCADE'),
+                        nullable=False)
+    imapuid = relationship(
+        'ImapUid',
+        backref=backref('labelitems',
+                        collection_class=set,
+                        cascade='all, delete-orphan'))
+
+    label_id = Column(Integer, ForeignKey(Label.id, ondelete='CASCADE'),
+                      nullable=False)
+    label = relationship(
+        Label,
+        backref=backref('labelitems',
+                        cascade='all, delete-orphan',
+                        lazy='dynamic'))
+
+    @property
+    def namespace(self):
+        return self.label.namespace
+
+Index('imapuid_label_ids', LabelItem.imapuid_id, LabelItem.label_id)

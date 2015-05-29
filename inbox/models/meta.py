@@ -19,9 +19,10 @@ def load_models():
     from inbox.models.thread import Thread, TagItem
     from inbox.models.transaction import Transaction
     from inbox.models.when import When, Time, TimeSpan, Date, DateSpan
+    from inbox.models.label import Label
     exports = [Account, MailSyncBase, ActionLog, Block, Part,
                MessageContactAssociation, Contact, Calendar, Event, Folder,
                FolderItem, Message, Namespace, SearchIndexCursor, Secret, Tag,
                Thread, TagItem, Transaction, When, Time, TimeSpan, Date,
-               DateSpan]
+               DateSpan, Label]
     return exports

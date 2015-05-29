@@ -38,9 +38,6 @@ class Folder(MailSyncBase):
     # for e.g. EAS uses it to store the eas_folder_id
     identifier = Column(String(MAX_FOLDER_NAME_LENGTH), nullable=True)
 
-    __table_args__ = (UniqueConstraint('account_id', 'name',
-                                       name='account_id_2'),)
-
     @property
     def lowercase_name(self):
         if self.name is None:
@@ -121,6 +118,9 @@ class Folder(MailSyncBase):
                               name=tag_name)
                     db_session.add(tag)
                     return tag
+
+    __table_args__ = (UniqueConstraint('account_id', 'name',
+                                       name='account_id_2'),)
 
 
 class FolderItem(MailSyncBase):
